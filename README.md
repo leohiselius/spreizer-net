@@ -1,7 +1,7 @@
 # spreizer-net
-Implementation in Brian2 of anisotropic spiking neural network 
+### Implementation in Brian2 of anisotropic spiking neural network
 
-Before running, make sure the files "perlin.py", "torus_distance.py" and "params.py" as well as the folders "spike_monitors", "state_monitors", "figures" lie in the same folder as "spreizer_net.py"
+Before running, make sure the files "perlin.py", "torus_distance.py" and "params.py" as well as the folders "spike_monitors", "state_monitors", "figures" lie in the same folder as "spreizer_net.py".
 
 To run a simulation, create an instance of the SpreizerNet-class. The only required arguments are the respective sizes of the excitatory and inhibitory populations, respectively. Note that these number must be square. Then, call the necessary methods, like so:
 

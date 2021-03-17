@@ -16,7 +16,7 @@ sn.save_monitors('example_simulation')
 
 See the documentation for connecting external input.
 
-Parameters can be changed in the file "params.py". Note that the values of the dictionary in "params.py" can be changed from another file.
+Parameters can be changed in the file "params.py". Note that the values of the dictionary in "params.py" can be changed from within another file.
 
 The file "excitability_matrix.py" generates plots of the EI-landscape along with a kind of flow map. 
 

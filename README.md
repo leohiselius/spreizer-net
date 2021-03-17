@@ -5,14 +5,14 @@ Before running, make sure the files "perlin.py", "torus_distance.py" and "params
 
 To run a simulation, create an instance of the SpreizerNet-class. The only required arguments are the respective sizes of the excitatory and inhibitory populations, respectively. Note that these number must be square. Then, call the necessary methods, like so:
 
-sn = SpreizerNet(14400, 3600)
-sn.set_seed()
-sn.populate()
-sn.connect()
-sn.set_initial_potentials()
-sn.connect_spike_monitors()
-sn.run_sim()
-sn.save_monitors('example_simulation')
+    sn = SpreizerNet(14400, 3600)  
+    sn.set_seed()  
+    sn.populate()  
+    sn.connect()  
+    sn.set_initial_potentials()  
+    sn.connect_spike_monitors()  
+    sn.run_sim()  
+    sn.save_monitors('example_simulation')  
 
 See the documentation for connecting external input.
 

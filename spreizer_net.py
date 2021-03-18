@@ -201,7 +201,7 @@ class SpreizerNet:
         self.spike_generator = SpikeGeneratorGroup(self.network_dimensions['n_pop_e'], spike_idcs, spike_times)
 
         # When spike_generator fires, the corresponding neuron(s) of neuron_groups['e'] fires
-        self.spike_generator_synapses = Synapses(self.spike_generator, self.neuron_groups['e'], on_pre='v=0*mV')
+        self.spike_generator_synapses = Synapses(self.spike_generator, self.neuron_groups['e'], on_pre='v=Vt+1*mV')
         self.spike_generator_synapses.namespace['Vt'] = params.neuron_params['Vt']
 
         # Connect one to one

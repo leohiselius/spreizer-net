@@ -139,7 +139,7 @@ def excitability_matrix(sigma_e, sigma_i, perlin_scale, grid_offset,
         plt.show()
 
         # Plot binary landscape (below/above threshold)
-        above_thres = np.where(np.reshape(landscape, 14400)>-thres_pot)
+        above_thres = np.where(np.reshape(landscape, 14400)>thres_pot)
         binary_landscape = np.zeros(14400)
         binary_landscape[above_thres] = 1
         binary_landscape = np.reshape(binary_landscape,(120, 120))

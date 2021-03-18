@@ -255,19 +255,19 @@ class SpreizerNet:
         """        
         # Save spike_monitors
         if self.spike_monitors['e'] is not None: 
-            np.save('spike_monitors/'+simulation_name+'_e_i', self.spike_monitors['e'].i[:])
-            np.save('spike_monitors/'+simulation_name+'_e_t', self.spike_monitors['e'].t[:])
+            np.save('saves/spike_monitors/'+simulation_name+'_e_i', self.spike_monitors['e'].i[:])
+            np.save('saves/spike_monitors/'+simulation_name+'_e_t', self.spike_monitors['e'].t[:])
         if self.spike_monitors['i'] is not None:
-            np.save('spike_monitors/'+simulation_name+'_i_i', self.spike_monitors['i'].i[:])
-            np.save('spike_monitors/'+simulation_name+'_i_t', self.spike_monitors['i'].t[:])
+            np.save('saves/spike_monitors/'+simulation_name+'_i_i', self.spike_monitors['i'].i[:])
+            np.save('saves/spike_monitors/'+simulation_name+'_i_t', self.spike_monitors['i'].t[:])
 
         # Save state_monitors
         if self.state_monitors['e'] is not None:
-            np.save('state_monitors/'+simulation_name+'_e_v', self.state_monitors['e'].v[:])
-            np.save('state_monitors/'+simulation_name+'_e_t', self.state_monitors['e'].t[:])
+            np.save('saves/state_monitors/'+simulation_name+'_e_v', self.state_monitors['e'].v[:])
+            np.save('saves/state_monitors/'+simulation_name+'_e_t', self.state_monitors['e'].t[:])
         if self.state_monitors['i'] is not None:
-            np.save('state_monitors/'+simulation_name+'_i_v', self.state_monitors['i'].v[:])
-            np.save('state_monitors/'+simulation_name+'_i_t', self.state_monitors['i'].t[:])
+            np.save('saves/state_monitors/'+simulation_name+'_i_v', self.state_monitors['i'].v[:])
+            np.save('saves/state_monitors/'+simulation_name+'_i_t', self.state_monitors['i'].t[:])
 
     def restore_network(self):
         """Restores all attributes of the current class instance to the point where store_network() was called.

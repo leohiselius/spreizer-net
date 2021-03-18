@@ -13,6 +13,8 @@ To run a simulation, create an instance of the SpreizerNet-class. The only requi
     sn.connect_spike_monitors()  
     sn.run_sim()  
     sn.save_monitors('example_simulation')  
+    
+The spike monitors are saved to the folder "spike_monitors" when save_monitors('simulation_name') is called. For spike monitors, four files per simulation are saved: "spike_monitors/simulation_name_e_t.npy", "spike_monitors/simulation_name_e_i.npy", "spike_monitors/simulation_name_i_t.npy", "spike_monitors/simulation_name_i_i.npy". These are the spike times and spike indices for the e and i population, respectively. Remember to change the name of the simulation if you wish to save spike monitors for multiple simulations: saving with the same name will overwrite previous saves. If state monitors are connected, they will also be saved when calling save_monitors('simulation_name'), to the folder "state_monitors".
 
 See comments in code on connecting external input.
 

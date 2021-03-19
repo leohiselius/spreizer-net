@@ -18,7 +18,7 @@ The spike monitors are saved to the folder "spike_monitors" when save_monitors('
 
 See comments in code on connecting external input.
 
-Parameters can be changed in the file "params.py". Note that the parameter values in "params.py" can be changed from within another file.
+Parameters can be changed in the file "params.py". Be cautious when changing the parameter values in "params.py" from within another file: values in "params.py" which are dependent on other values will not change correspondingly!
 
 The file "excitability_matrix.py" generates plots of the EI-landscape along with a flow map in which the perlin directions are visualized, scaled with the relative excitability at a given location. 
 

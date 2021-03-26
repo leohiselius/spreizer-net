@@ -76,12 +76,16 @@ class SpreizerNet:
         self.network.add(self.neuron_groups['e'])
         self.network.add(self.neuron_groups['i'])
 
-    def connect(self, perlin_seed_value=0):
+    def connect(self, allow_multiple_connections=True, perlin_seed_value=0):
         """Connects neurons with synapses.
 
         Args:
+            allow_multiple_connections (bool, optional): If True, multiple connections can be made where probability 
+                                                            of connecting is greater than one. Defaults to True.
             perlin_seed (int, optional): Seed passed to generate_perlin(). Defaults to 0.
-        """         
+        """      
+        
+           
         # Generate perlin map
         perlin_map = generate_perlin(int(np.sqrt(self.network_dimensions['n_pop_e'])), params.perlin_scale,
             seed_value=perlin_seed_value, save=True)
@@ -107,15 +111,19 @@ class SpreizerNet:
             self.synapses['ii'].namespace[param] = params.synapse_params[param]
         
         # Make synapses
-        self.synapses['ee'].connect(
-            p='p_max_e*exp(-(torus_distance(x_pre+x_shift_pre, x_post, y_pre+y_shift_pre, y_post)**2)/(2*sigma_e**2))')
-        self.synapses['ie'].connect(
-            p='p_max_e*exp(-(torus_distance(x_pre, x_post, y_pre, y_post)**2)/(2*sigma_e**2))')
-        self.synapses['ei'].connect(
-            p='p_max_i*exp(-(torus_distance(x_pre, x_post, y_pre, y_post)**2)/(2*sigma_i**2))')
-        self.synapses['ii'].connect(
-            p='p_max_i*exp(-(torus_distance(x_pre, x_post, y_pre, y_post)**2)/(2*sigma_i**2))')
-
+        synapse_names = ['ee', 'ie', 'ei', 'ii']
+        if allow_multiple_connections:
+            for syn_name in synapse_names:
+                p_con = params.p_con[syn_name]
+                n_con = '(int(' + p_con + ')+1)'                    # ceil the likelihood. This is number of connections
+                p_con += '/' + n_con                                # divide the likelihood with its ceil
+                self.synapses[syn_name].connect(p=p_con, n=n_con)   # n_con connections are made with p=p_con
+        else:
+            self.synapses['ee'].connect(p=params.p_con['ee'])
+            self.synapses['ie'].connect(p=params.p_con['ie'])
+            self.synapses['ei'].connect(p=params.p_con['ei'])
+            self.synapses['ii'].connect(p=params.p_con['ii'])
+            
         # Synapse delay
         self.synapses['ee'].delay = self.synapses['ie'].delay = \
              self.synapses['ei'].delay = self.synapses['ii'].delay = 'synapse_delay'
@@ -137,7 +145,7 @@ class SpreizerNet:
               str(np.mean(i_out)) + ' +/- ' + str(np.std(i_out)))
 
     def set_initial_potentials(self, start_at_rest=True):
-        """Sets the initial membrane potentials for all neurons 
+        """Sets the initial membrane potentials for all neurons
 
         Args:
             start_at_rest (bool, optional): Controls if neurons start at rest or uniformly random between Vr and Vt. 

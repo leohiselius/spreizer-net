@@ -107,10 +107,8 @@ class SpreizerNet:
                 p_con += '/' + n_con                                # divide the likelihood with its ceil
                 self.synapses[syn_name].connect(p=p_con, n=n_con)   # n_con connections are made with p=p_con
         else:
-            self.synapses['ee'].connect(p=params.p_con['ee'])
-            self.synapses['ie'].connect(p=params.p_con['ie'])
-            self.synapses['ei'].connect(p=params.p_con['ei'])
-            self.synapses['ii'].connect(p=params.p_con['ii'])
+            for syn_name in synapse_names:
+                self.synapses[syn_name].connect(p=params.p_con[syn_name])
             
         # Synapse delay
         self.synapses['ee'].delay = self.synapses['ie'].delay = \

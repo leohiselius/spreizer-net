@@ -3,9 +3,9 @@
 
 Before running, make sure the files "perlin.py", "torus_distance.py" and "params.py" as well as the folders "saves", "figures" lie in the same folder as "spreizer_net.py". In "saves", the folders "spike_monitors" and "state_monitors" should exist.
 
-To run a simulation, create an instance of the SpreizerNet-class. The only required arguments are the respective sizes of the excitatory and inhibitory populations, respectively. Note that these number must be square. Then, call the necessary methods, like so:
+To run a simulation, create an instance of the SpreizerNet-class. Then, call the necessary methods, like so:
 
-    sn = SpreizerNet(14400, 3600)  
+    sn = SpreizerNet()  
     sn.set_seed()  
     sn.populate()  
     sn.connect()  
@@ -21,7 +21,5 @@ See comments in code on connecting external input.
 Parameters can be changed in the file "params.py". Be cautious when changing the parameter values in "params.py" from within another file: values in "params.py" which are dependent on other values will not change correspondingly!
 
 The file "excitability_matrix.py" generates plots of the EI-landscape along with a flow map in which the perlin directions are visualized, scaled with the relative excitability at a given location. 
-
-When either sigma_e or sigma_i are smaller than ~0.08, the effective connection probability will decrease. Running excitability_matrix() will provide details for how much Je and Ji should be increased in order to keep n_connections * synapse_strength constant.
 
 If you have any questions, please email me on leohi@kth.se

@@ -1,28 +1,44 @@
 from brian2 import *
 import numpy as np
 
+# Network dimensions
+network_dimensions = {
+    'n_pop_e' : 14400,        # Number of e neurons (must be a square number)
+    'n_pop_i' : 3600         # Number of i neurons (must be a square number)
+    }
+
+network_dimensions['n_row_e'] = network_dimensions['n_col_e'] = int(np.sqrt(network_dimensions['n_pop_e']))
+network_dimensions['n_row_i'] = network_dimensions['n_col_i'] = int(np.sqrt(network_dimensions['n_pop_i']))
+
+assert (int(np.sqrt(network_dimensions['n_pop_e'])) == np.sqrt(network_dimensions['n_pop_e'])) and \
+            (int(np.sqrt(network_dimensions['n_pop_i'])) == np.sqrt(network_dimensions['n_pop_i'])), \
+                'n_pop_e or n_pop_i is not a square number!'
+
 # Neuron parameters
 neuron_params = {
     'Cm' : 250 * pF,            # capacitance
     'gL' : 25 * nsiemens,       # conductance
     'EL' : -70 * mV,            # leak (rest) potential
-    'mu_gwn' : 350 * pA,        # constant background current
+    'mu_gwn' : 0 * pA,        # constant background current
     'sigma_gwn' : 0 * pA,      # std of stochastic background current
     'tau_e' : 5 * ms,           # e time constant
     'tau_i' : 5 * ms,           # i time constant
+    'tau_stim' : 5 * ms,         # stim time constant
     'tau_ref' : 2 * ms,         # refractory time constant
     'Vt' : -55 * mV,            # Threshold potential
     'Vr' : -70 * mV             # Reset potential
     }
 neuron_params['tau_m'] = neuron_params['Cm'] / neuron_params['gL']
 
+ta = TimedArray(np.zeros((1, network_dimensions['n_pop_e'])) * pA, dt=0.1*ms)  # placeholder for eventual input stimulus
+
 if neuron_params['sigma_gwn'] == 0:
     neuron_eqs = '''
-        dv/dt = (-gL * (v - EL) + Ie + Ii + mu_gwn) / Cm  : volt (unless refractory)
+        dv/dt = (-gL * (v - EL) + Ie + Ii + ta(t, i) + mu_gwn) / Cm  : volt (unless refractory)
         '''
 else:
     neuron_eqs = '''
-        dv/dt = (-gL * (v - EL) + Ie + Ii + mu_gwn) / Cm + (sigma_gwn/Cm) * sqrt(2*tau_m) * xi : volt (unless refractory)
+        dv/dt = (-gL * (v - EL) + Ie + Ii + ta(t, i) + mu_gwn) / Cm + (sigma_gwn/Cm) * sqrt(2*tau_m) * xi : volt (unless refractory)
         '''
 
 neuron_eqs += '''

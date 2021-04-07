@@ -11,21 +11,8 @@ import params
 
 class SpreizerNet:  
 
-    def __init__(self, n_pop_e, n_pop_i):
-        """Initializer
-
-        Args:
-            n_pop_e (int): Number of neurons in the e population. Must be a square number.
-            n_pop_i (int): Number of neurons in the i population. Must be a square number.
-        """   
-        assert (int(np.sqrt(n_pop_e)) == np.sqrt(n_pop_e)) and \
-            (int(np.sqrt(n_pop_i)) == np.sqrt(n_pop_i)), \
-                'n_pop_e or n_pop_i is not a square number!'
-
+    def __init__(self):
         self.network = Network()
-        self.network_dimensions = {'n_pop_e' : n_pop_e, 'n_pop_i' : n_pop_i, 
-                                    'n_row_e' : int(np.sqrt(n_pop_e)), 'n_col_e' : int(np.sqrt(n_pop_e)),
-                                    'n_row_i' : int(np.sqrt(n_pop_i)), 'n_col_i' : int(np.sqrt(n_pop_i))}
         self.neuron_groups = {'e' : None, 'i' : None}
         self.synapses = {'ee' : None, 'ie' : None, 'ei' : None, 'ii' : None}
         self.spike_monitors = {'e' : None, 'i' : None}
@@ -51,22 +38,24 @@ class SpreizerNet:
             integration_method = 'euler'
         
         # Instantiate the excitatory and inhibitory networks
-        self.neuron_groups['e'] = NeuronGroup(self.network_dimensions['n_pop_e'], params.neuron_eqs, threshold='v>Vt',
+        self.neuron_groups['e'] = NeuronGroup(params.network_dimensions['n_pop_e'], params.neuron_eqs, threshold='v>Vt',
                                    reset='v=Vr', refractory=params.neuron_params['tau_ref'], method=integration_method)
         
-        self.neuron_groups['i'] = NeuronGroup(self.network_dimensions['n_pop_i'], params.neuron_eqs, threshold='v>Vt',
+        self.neuron_groups['i'] = NeuronGroup(params.network_dimensions['n_pop_i'], params.neuron_eqs, threshold='v>Vt',
                                    reset='v=Vr', refractory=params.neuron_params['tau_ref'], method=integration_method)
 
         # Neuron parameters
         for param in params.neuron_params:
             self.neuron_groups['e'].namespace[param] = params.neuron_params[param]
             self.neuron_groups['i'].namespace[param] = params.neuron_params[param]
+        self.neuron_groups['e'].namespace['ta'] = params.ta
+        self.neuron_groups['i'].namespace['ta'] = params.ta
 
         # Place neurons on evenly spaced grid [0,1]x[0,1]. i neurons are shifted to lay in between e neurons.
-        n_row_e = float(self.network_dimensions['n_row_e'])
-        n_row_i = float(self.network_dimensions['n_row_i'])
-        n_col_e = float(self.network_dimensions['n_col_e'])
-        n_col_i = float(self.network_dimensions['n_col_i'])
+        n_row_e = float(params.network_dimensions['n_row_e'])
+        n_row_i = float(params.network_dimensions['n_row_i'])
+        n_col_e = float(params.network_dimensions['n_col_e'])
+        n_col_i = float(params.network_dimensions['n_col_i'])
         self.neuron_groups['e'].x = '(i // n_col_e) / n_col_e'
         self.neuron_groups['e'].y = '(i % n_row_e) / n_row_e'
         self.neuron_groups['i'].x = '(i // n_col_i) / n_col_i + 1/(2*n_col_e)'
@@ -85,16 +74,15 @@ class SpreizerNet:
             perlin_seed (int, optional): Seed passed to generate_perlin(). Defaults to 0.
         """      
         
-           
         # Generate perlin map
-        perlin_map = generate_perlin(int(np.sqrt(self.network_dimensions['n_pop_e'])), params.perlin_scale,
+        perlin_map = generate_perlin(int(np.sqrt(params.network_dimensions['n_pop_e'])), params.perlin_scale,
             seed_value=perlin_seed_value, save=True)
 
         idx = 0
-        for i in range(self.network_dimensions['n_col_e']):
-            for j in range(self.network_dimensions['n_row_e']):
-                self.neuron_groups['e'].x_shift[idx] = params.grid_offset / self.network_dimensions['n_col_e'] * np.cos(perlin_map[i, j])
-                self.neuron_groups['e'].y_shift[idx] = params.grid_offset / self.network_dimensions['n_row_e'] * np.sin(perlin_map[i, j])
+        for i in range(params.network_dimensions['n_col_e']):
+            for j in range(params.network_dimensions['n_row_e']):
+                self.neuron_groups['e'].x_shift[idx] = params.grid_offset / params.network_dimensions['n_col_e'] * np.cos(perlin_map[i, j])
+                self.neuron_groups['e'].y_shift[idx] = params.grid_offset / params.network_dimensions['n_row_e'] * np.sin(perlin_map[i, j])
                 idx += 1
       
         # Define synapses
@@ -158,14 +146,14 @@ class SpreizerNet:
             self.neuron_groups['e'].v = 'Vr + rand() * (Vt - Vr)'
             self.neuron_groups['i'].v = 'Vr + rand() * (Vt - Vr)'
 
-    def prepare_external_input(self, samples, times, sigma_spike=1):
-        """Reshapes flattened input data to n_row_e x n_col_e and returns the list of indices and 
+    def prepare_external_input(self, samples, times, sigma_spike=0):
+        """Reshapes flattened input data to n_row_e x n_col_e and returns the list of indices and
             their respective spike times
 
         Args:
             samples ([np.array]): list of flattened input data.
             times ([ms]): the corresponding spike times (in ms) of the samples.
-            sigma_spike (int, optional): standard deviation (in ms) of spike timing. Defaults to 1.
+            sigma_spike (int, optional): standard deviation (in ms) of spike timing. Defaults to 0.
 
         Returns:
             spike_indices [int]: list of neuron indices
@@ -176,10 +164,10 @@ class SpreizerNet:
         # Reshapes vector to MxM image, interpolates, resamples, reshape back to vector
         # Code below written by Andrew Lehr.
         M = int(np.sqrt(np.shape(samples[0])[0]))
-        N = self.network_dimensions['n_row_e']
+        N = params.network_dimensions['n_row_e']
         spike_indices = []
         spike_times = []
-
+        
         for t, v in enumerate(samples):
             time = times[t]
             v = np.rot90(v.reshape(M,M), k=3)
@@ -192,30 +180,35 @@ class SpreizerNet:
             znew = f(xnew, ynew)
             znew = np.where(znew.reshape(N*N,) > 0)[0]
         # End of Andrew Lehr's code.
-
             for idx in znew:
                 spike_indices.append(idx)
                 spike_times.append(max(time/ms+sigma_spike*np.round(np.random.randn(),1),0)*ms)
 
         return spike_indices, spike_times
         
-    def connect_external_input(self, spike_idcs, spike_times):
-        # TODO DISCLAIMER: external input should probably be implemented as a current injection as opposed to this.
-        """Generate external input (e.g. MNIST) at specific times
+    def connect_external_input(self, spike_idcs, pulse_time=10*ms):
+        """Generate external input (e.g. MNIST) at a specific time
         Args:
             spike_idcs ([int]): the corresponding indices
-            spike_times ([int]): the corresponding spike_times. Must be same length as spike_idcs.
-        """        
-        self.spike_generator = SpikeGeneratorGroup(self.network_dimensions['n_pop_e'], spike_idcs, spike_times)
+            pulse_time (int*ms, optional): the time of stimulus
+        """      
 
-        # When spike_generator fires, the corresponding neuron(s) of neuron_groups['e'] fires
-        self.spike_generator_synapses = Synapses(self.spike_generator, self.neuron_groups['e'], on_pre='v=Vt+1*mV')
-        self.spike_generator_synapses.namespace['Vt'] = params.neuron_params['Vt']
+        def alpha_fun(times, spike_time, num_currents):
+            pot_gap = -((params.neuron_params['Vr'] - params.neuron_params['Vt'] + \
+                params.neuron_params['mu_gwn'] / params.neuron_params['gL']) / mV)
+            Jsyn = pot_gap * 10 * np.e / 0.22
+            tau = params.neuron_params['tau_e']
+            time_mat = np.array([times, ]*num_currents).T * second
+            all_currents = np.maximum(0, (time_mat - spike_time) / tau * np.exp(-(time_mat - spike_time) / tau)*\
+                (0.8+0.5*np.random.rand(num_currents))*Jsyn)
+            return all_currents
 
-        # Connect one to one
-        self.spike_generator_synapses.connect('i==j')
-        self.network.add(self.spike_generator)
-        self.network.add(self.spike_generator_synapses)
+        max_time = int(1 * second / defaultclock.dt)    # If simulation is longer than 1 second, max_time should be increased (=sim_time/dt)
+        times = np.arange(0, 1000, defaultclock.dt/ms) * ms
+        ta_values = np.zeros((max_time, params.network_dimensions['n_pop_e']))
+        ta_values[:, spike_idcs] = alpha_fun(times, pulse_time, len(spike_idcs))
+        ta = TimedArray(ta_values * pA, dt=0.1*ms)
+        self.neuron_groups['e'].namespace['ta'] = ta
             
     def connect_spike_monitors(self):
         """Connect spike monitors to neuron_groups.

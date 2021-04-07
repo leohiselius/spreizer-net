@@ -235,18 +235,22 @@ class SpreizerNet:
         """        
         self.network.store()
 
-    def run_sim(self, simulation_time=1*second):
+    def run_sim(self, simulation_time=1*second, is_report=True):
         """Runs the simulation.
 
         Args:
             simulation_time (second, optional): duration of the simulation. Defaults to 1*second.
+            is_report (bool, optional): determines if simulation progress is reported in terminal or not. Defaults to True
         """   
         # Print warning if the spike_monitors are not connected
         if self.spike_monitors['e'] is None or self.spike_monitors['i'] is None:
             warnings.warn('Simulation running without SpikeMonitors!')
 
         # Run simulation
-        self.network.run(simulation_time, report='stderr', report_period=2*second)
+        if is_report:
+            self.network.run(simulation_time, report='stderr', report_period=2*second)
+        else:
+            self.network.run(simulation_time, report=None)
 
     def save_monitors(self, simulation_name):
         """Saves any existing montitors (spike and state) to folders spike_monitors and state_monitors, respectively.

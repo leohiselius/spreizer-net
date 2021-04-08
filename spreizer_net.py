@@ -65,6 +65,32 @@ class SpreizerNet:
         self.network.add(self.neuron_groups['e'])
         self.network.add(self.neuron_groups['i'])
 
+    def connect_random(self):
+        """Connects a randomly connected network.
+        """        
+        # Define synapses
+        self.synapses['ee'] = Synapses(self.neuron_groups['e'], on_pre='ke += Je')
+        self.synapses['ie'] = Synapses(self.neuron_groups['e'], self.neuron_groups['i'], on_pre='ke += Je')
+        self.synapses['ei'] = Synapses(self.neuron_groups['i'], self.neuron_groups['e'], on_pre='ki += Ji')
+        self.synapses['ii'] = Synapses(self.neuron_groups['i'], on_pre='ki += Ji')
+
+        # Synapse parameters
+        for param in params.synapse_params:
+            self.synapses['ee'].namespace[param] = params.synapse_params[param]
+            self.synapses['ie'].namespace[param] = params.synapse_params[param]
+            self.synapses['ei'].namespace[param] = params.synapse_params[param]
+            self.synapses['ii'].namespace[param] = params.synapse_params[param]
+        
+        # Make synapses
+        synapse_names = ['ee', 'ie', 'ei', 'ii']
+        for syn_name in synapse_names:
+            if syn_name == 'ee' or syn_name == 'ie':
+                p_con = params.p_e
+            elif syn_name == 'ei' or syn_name == 'ii':
+                p_con = params.p_i
+            self.synapses[syn_name].connect(p=p_con)
+
+
     def connect(self, allow_multiple_connections=True, perlin_seed_value=0):
         """Connects neurons with synapses.
 
@@ -76,7 +102,7 @@ class SpreizerNet:
         
         # Generate perlin map
         perlin_map = generate_perlin(int(np.sqrt(params.network_dimensions['n_pop_e'])), params.perlin_scale,
-            seed_value=perlin_seed_value, save=True)
+            seed_value=perlin_seed_value)
 
         idx = 0
         for i in range(params.network_dimensions['n_col_e']):

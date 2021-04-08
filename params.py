@@ -62,8 +62,10 @@ synapse_params = {
     }
 
 synapse_params['Ji'] = -synapse_params['g'] * synapse_params['Je']
-synapse_params['p_max_e'] = (1 / 20) / (2 * pi * synapse_params['sigma_e']**2)
-synapse_params['p_max_i'] = (1 / 20)/ (2 * pi * synapse_params['sigma_i']**2)
+p_e = 0.05
+p_i = 0.05
+synapse_params['p_max_e'] = p_e / (2 * pi * synapse_params['sigma_e']**2)
+synapse_params['p_max_i'] = p_i / (2 * pi * synapse_params['sigma_i']**2)
 
 # Connectivity profiles
 p_con = {

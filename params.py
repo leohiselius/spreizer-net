@@ -3,8 +3,8 @@ import numpy as np
 
 # Network dimensions
 network_dimensions = {
-    'n_pop_e' : 14400,        # Number of e neurons (must be a square number)
-    'n_pop_i' : 3600         # Number of i neurons (must be a square number)
+    'n_pop_e' : 14400,          # Number of e neurons (must be a square number)
+    'n_pop_i' : 3600            # Number of i neurons (must be a square number)
     }
 
 network_dimensions['n_row_e'] = network_dimensions['n_col_e'] = int(np.sqrt(network_dimensions['n_pop_e']))
@@ -19,11 +19,11 @@ neuron_params = {
     'Cm' : 250 * pF,            # capacitance
     'gL' : 25 * nsiemens,       # conductance
     'EL' : -70 * mV,            # leak (rest) potential
-    'mu_gwn' : 0 * pA,        # constant background current
-    'sigma_gwn' : 0 * pA,      # std of stochastic background current
+    'mu_gwn' : 0 * pA,          # constant background current
+    'sigma_gwn' : 0 * pA,       # std of stochastic background current
     'tau_e' : 5 * ms,           # e time constant
     'tau_i' : 5 * ms,           # i time constant
-    'tau_stim' : 5 * ms,         # stim time constant
+    'tau_stim' : 5 * ms,        # stim time constant
     'tau_ref' : 2 * ms,         # refractory time constant
     'Vt' : -55 * mV,            # Threshold potential
     'Vr' : -70 * mV             # Reset potential
@@ -56,23 +56,23 @@ neuron_eqs += '''
 synapse_params = {
     'Je' : np.e * 10 * pA,      # excitatory synaptic current
     'g' :  4,                   # ratio of recurrent inhibition and excitation
-    'sigma_e' : 0.05,          # excitatory connectivity width
-    'sigma_i' : 0.1,        # inhibitory connectivity width
-    'synapse_delay' : 1 * ms   # synapse delay
+    'sigma_e' : 0.05,           # excitatory connectivity width
+    'sigma_i' : 0.1,            # inhibitory connectivity width
+    'synapse_delay' : 1 * ms,   # synapse delay
+    'p_e' : 0.05,               # connection probability of e neurons
+    'p_i' : 0.05                # connection probability of i neurons
     }
 
 synapse_params['Ji'] = -synapse_params['g'] * synapse_params['Je']
-p_e = 0.05
-p_i = 0.05
-synapse_params['p_max_e'] = p_e / (2 * pi * synapse_params['sigma_e']**2)
-synapse_params['p_max_i'] = p_i / (2 * pi * synapse_params['sigma_i']**2)
+synapse_params['amp_e'] = synapse_params['p_e'] / (2 * pi * synapse_params['sigma_e']**2)
+synapse_params['amp_i'] = synapse_params['p_i'] / (2 * pi * synapse_params['sigma_i']**2)
 
 # Connectivity profiles
 p_con = {
-    'ee' : 'p_max_e*exp(-(torus_distance(x_pre+x_shift_pre, x_post, y_pre+y_shift_pre, y_post)**2)/(2*sigma_e**2))',
-    'ie' : 'p_max_e*exp(-(torus_distance(x_pre, x_post, y_pre, y_post)**2)/(2*sigma_e**2))',
-    'ei' : 'p_max_i*exp(-(torus_distance(x_pre, x_post, y_pre, y_post)**2)/(2*sigma_i**2))',
-    'ii' : 'p_max_i*exp(-(torus_distance(x_pre, x_post, y_pre, y_post)**2)/(2*sigma_i**2))'
+    'ee' : 'amp_e*exp(-(torus_distance(x_pre+x_shift_pre, x_post, y_pre+y_shift_pre, y_post)**2)/(2*sigma_e**2))',
+    'ie' : 'amp_e*exp(-(torus_distance(x_pre, x_post, y_pre, y_post)**2)/(2*sigma_e**2))',
+    'ei' : 'amp_i*exp(-(torus_distance(x_pre, x_post, y_pre, y_post)**2)/(2*sigma_i**2))',
+    'ii' : 'amp_i*exp(-(torus_distance(x_pre, x_post, y_pre, y_post)**2)/(2*sigma_i**2))'
     }
 
 # Perlin scale and grid offset

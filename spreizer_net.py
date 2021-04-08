@@ -19,7 +19,7 @@ class SpreizerNet:
         self.state_monitors = {'e' : None, 'i' : None}
         self.spike_generator = None
         self.spike_generator_synapses = None
-        
+      
     def set_seed(self, seed_value=0):
         """Sets the seed for any stochastic elements of the simulation.
 
@@ -28,7 +28,7 @@ class SpreizerNet:
         """        
         seed(seed_value)
         np.random.seed(seed_value)
-    
+  
     def populate(self):     
         """Fills the network with e and i neurons on evenly spaced [0,1]x[0,1]-grid.
         """        
@@ -36,7 +36,7 @@ class SpreizerNet:
             integration_method = 'exact'
         else:
             integration_method = 'euler'
-        
+ 
         # Instantiate the excitatory and inhibitory networks
         self.neuron_groups['e'] = NeuronGroup(params.network_dimensions['n_pop_e'], params.neuron_eqs, threshold='v>Vt',
                                    reset='v=Vr', refractory=params.neuron_params['tau_ref'], method=integration_method)
@@ -80,14 +80,14 @@ class SpreizerNet:
             self.synapses['ie'].namespace[param] = params.synapse_params[param]
             self.synapses['ei'].namespace[param] = params.synapse_params[param]
             self.synapses['ii'].namespace[param] = params.synapse_params[param]
-        
+    
         # Make synapses
         synapse_names = ['ee', 'ie', 'ei', 'ii']
         for syn_name in synapse_names:
             if syn_name == 'ee' or syn_name == 'ie':
-                p_con = params.p_e
+                p_con = params.synapse_params['p_e']
             elif syn_name == 'ei' or syn_name == 'ii':
-                p_con = params.p_i
+                p_con = params.synapse_params['p_i']
             self.synapses[syn_name].connect(p=p_con)
 
 
@@ -210,30 +210,32 @@ class SpreizerNet:
 
         return spike_indices, spike_times
         
-    def connect_external_input(self, spike_idcs, pulse_time=10*ms):
+    def connect_external_input(self, spike_idcs, pulse_time=10*ms, mean_stim=1.1, sigma_stim=0.2):
         """Generate external input (e.g. MNIST) at a specific time
         Args:
             spike_idcs ([int]): the corresponding indices
             pulse_time (int*ms, optional): the time of stimulus
+            mean_stim (float, optional): the mean stimulation (1 drives the neuron to Vt). Defaults to 1.1
+            sigma_stim (float, optional): the std of stimulation. Defaults to 0.2. With these settings, 70% fire.
         """      
 
-        def alpha_fun(times, spike_time, num_currents):
+        def alpha_fun(times, spike_time, num_currents, mean_stim, sigma_stim):
             pot_gap = -((params.neuron_params['Vr'] - params.neuron_params['Vt'] + \
                 params.neuron_params['mu_gwn'] / params.neuron_params['gL']) / mV)
             Jsyn = pot_gap * 10 * np.e / 0.22
             tau = params.neuron_params['tau_e']
             time_mat = np.array([times, ]*num_currents).T * second
             all_currents = np.maximum(0, (time_mat - spike_time) / tau * np.exp(-(time_mat - spike_time) / tau)*\
-                (0.8+0.5*np.random.rand(num_currents))*Jsyn)
+                (mean_stim+sigma_stim*np.random.randn(num_currents))*Jsyn)
             return all_currents
 
         max_time = int(1 * second / defaultclock.dt)    # If simulation is longer than 1 second, max_time should be increased (=sim_time/dt)
         times = np.arange(0, 1000, defaultclock.dt/ms) * ms
         ta_values = np.zeros((max_time, params.network_dimensions['n_pop_e']))
-        ta_values[:, spike_idcs] = alpha_fun(times, pulse_time, len(spike_idcs))
+        ta_values[:, spike_idcs] = alpha_fun(times, pulse_time, len(spike_idcs), mean_stim, sigma_stim)
         ta = TimedArray(ta_values * pA, dt=0.1*ms)
         self.neuron_groups['e'].namespace['ta'] = ta
-            
+
     def connect_spike_monitors(self):
         """Connect spike monitors to neuron_groups.
         """        
@@ -304,4 +306,4 @@ class SpreizerNet:
         if self.spike_generator in self.network.sorted_objects:
             self.network.remove(self.spike_generator)
             self.network.remove(self.spike_generator_synapses)
-        self.network.restore(restore_random_state=True)   
+        self.network.restore(restore_random_state=True)

@@ -16,13 +16,12 @@ def gaussian_2d_fast(size, amp, mu_x, mu_y, sigma):
 
 def excitability_matrix(sigma_e, sigma_i, perlin_scale, grid_offset,
                         p_e=0.05, p_i=0.05, we=0.22, g=4,
-                        n_row_e=120, n_row_i=60, 
+                        n_row_e=120, n_row_i=60, mu_gwn=0, multiple_connections=True,
                         expected_connectivity=True, is_plot=True):
 
     n_pop_e = n_row_e**2
     n_pop_i = n_row_i**2
 
-    mu_gwn = 350 * 1e-12 # Ampere
     gL = 25 * 1e-9       # Siemens
 
     p_max_e = p_e / (2 * np.pi * sigma_e**2)
@@ -49,7 +48,8 @@ def excitability_matrix(sigma_e, sigma_i, perlin_scale, grid_offset,
             mh = gaussian_2d_fast((n_row_e, n_row_e), p_max_e, mu_x+x_offset, mu_y+y_offset, sigma_e)
 
             #clip probabilities at 1
-            e_landscape[counter] = np.minimum(mh, np.ones(mh.shape))
+            if not multiple_connections:
+                e_landscape[counter] = np.minimum(mh, np.ones(mh.shape))
             counter += 1
 
     # Inhibitory
@@ -61,17 +61,22 @@ def excitability_matrix(sigma_e, sigma_i, perlin_scale, grid_offset,
             mh = gaussian_2d_fast((n_row_e, n_row_e), p_max_i, mu_x, mu_y, sigma_i)
 
             #clip probabilities at 1
-            i_landscape[counter] = np.minimum(mh, np.ones(mh.shape))
+            if not multiple_connections:
+                i_landscape[counter] = np.minimum(mh, np.ones(mh.shape))
             counter += 1
 
     # in total there should be n_pop_e * (n_pop_e * p_max_e) = 10 368 000 e-connections
     # and n_pop_i * (n_pop_e * 0.05) = 2 592 000 i-connections
     num_e_connections = np.sum(e_landscape)
     num_i_connections = np.sum(i_landscape)
-    e_calibration = n_pop_e * n_pop_e * p_e / num_e_connections
-    i_calibration = n_pop_i * n_pop_e * p_i / num_i_connections
-    print('e_calibration is ', e_calibration)
-    print('i_calibration is ', i_calibration)
+    if multiple_connections:
+        e_calibration = 1
+        i_calibration = 1
+    else:
+        e_calibration = n_pop_e * n_pop_e * p_e / num_e_connections
+        i_calibration = n_pop_i * n_pop_e * p_i / num_i_connections
+        print('e_calibration is ', e_calibration)
+        print('i_calibration is ', i_calibration)
 
     if expected_connectivity:
         # calculate expected number of connections

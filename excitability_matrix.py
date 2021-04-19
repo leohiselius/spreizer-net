@@ -47,9 +47,11 @@ def excitability_matrix(sigma_e, sigma_i, perlin_scale, grid_offset,
             y_offset = grid_offset / n_row_e * np.sin(perlin[i,j])
             mh = gaussian_2d_fast((n_row_e, n_row_e), p_max_e, mu_x+x_offset, mu_y+y_offset, sigma_e)
 
-            #clip probabilities at 1
             if not multiple_connections:
+                #clip probabilities at 1
                 e_landscape[counter] = np.minimum(mh, np.ones(mh.shape))
+            else:
+                e_landscape[counter] = mh
             counter += 1
 
     # Inhibitory
@@ -60,10 +62,13 @@ def excitability_matrix(sigma_e, sigma_i, perlin_scale, grid_offset,
         for mu_y in mu_ys:
             mh = gaussian_2d_fast((n_row_e, n_row_e), p_max_i, mu_x, mu_y, sigma_i)
 
-            #clip probabilities at 1
             if not multiple_connections:
+                #clip probabilities at 1
                 i_landscape[counter] = np.minimum(mh, np.ones(mh.shape))
+            else:
+                i_landscape[counter] = mh
             counter += 1
+
 
     # in total there should be n_pop_e * (n_pop_e * p_max_e) = 10 368 000 e-connections
     # and n_pop_i * (n_pop_e * 0.05) = 2 592 000 i-connections
@@ -119,7 +124,6 @@ def excitability_matrix(sigma_e, sigma_i, perlin_scale, grid_offset,
     landscape += wi * i_landscape
 
     # scale X and Y quiver according to values in ei_landscape. first normalize landscape
-
     norm_landscape = np.copy(landscape)
     norm_landscape -= np.amin(norm_landscape)
     norm_landscape /= np.amax(norm_landscape)

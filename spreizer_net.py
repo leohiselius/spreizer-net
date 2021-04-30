@@ -89,13 +89,12 @@ class SpreizerNet:
             elif syn_name == 'ei' or syn_name == 'ii':
                 p_con = params.synapse_params['p_i']
             self.synapses[syn_name].connect(p=p_con)
-
-
+    
     def connect(self, allow_multiple_connections=True, perlin_seed_value=0):
         """Connects neurons with synapses.
 
         Args:
-            allow_multiple_connections (bool, optional): If True, multiple connections can be made where probability 
+            allow_multiple_connections (bool, optional): If True, multiple connections can be made where probability
                                                             of connecting is greater than one. Defaults to True.
             perlin_seed (int, optional): Seed passed to generate_perlin(). Defaults to 0.
         """      
@@ -220,8 +219,10 @@ class SpreizerNet:
         """      
 
         def alpha_fun(times, spike_time, num_currents, mean_stim, sigma_stim):
-            pot_gap = -((params.neuron_params['Vr'] - params.neuron_params['Vt'] + \
-                params.neuron_params['mu_gwn'] / params.neuron_params['gL']) / mV)
+            #pot_gap = -((params.neuron_params['Vr'] - params.neuron_params['Vt'] + \
+            #    params.neuron_params['mu_gwn'] / params.neuron_params['gL']) / mV)
+
+            pot_gap = 15    # if mu_gwn != 0, the potential gap will be something different.
             Jsyn = pot_gap * 10 * np.e / 0.22
             tau = params.neuron_params['tau_e']
             time_mat = np.array([times, ]*num_currents).T * second
@@ -278,27 +279,28 @@ class SpreizerNet:
         else:
             self.network.run(simulation_time, report=None)
 
-    def save_monitors(self, simulation_name):
+    def save_monitors(self, simulation_name, SUPERDIR=''):
         """Saves any existing montitors (spike and state) to folders spike_monitors and state_monitors, respectively.
 
         Args:
             simulation_name (str): The name of the simulation.
+            SUPERDIR (str, optional): The directory in which the "saves"-directory exists. Defaults to ''.
         """        
         # Save spike_monitors
         if self.spike_monitors['e'] is not None: 
-            np.save('saves/spike_monitors/'+simulation_name+'_e_i', self.spike_monitors['e'].i[:])
-            np.save('saves/spike_monitors/'+simulation_name+'_e_t', self.spike_monitors['e'].t[:])
+            np.save(SUPERDIR+'saves/spike_monitors/'+simulation_name+'_e_i', self.spike_monitors['e'].i[:])
+            np.save(SUPERDIR+'saves/spike_monitors/'+simulation_name+'_e_t', self.spike_monitors['e'].t[:])
         if self.spike_monitors['i'] is not None:
-            np.save('saves/spike_monitors/'+simulation_name+'_i_i', self.spike_monitors['i'].i[:])
-            np.save('saves/spike_monitors/'+simulation_name+'_i_t', self.spike_monitors['i'].t[:])
+            np.save(SUPERDIR+'saves/spike_monitors/'+simulation_name+'_i_i', self.spike_monitors['i'].i[:])
+            np.save(SUPERDIR+'saves/spike_monitors/'+simulation_name+'_i_t', self.spike_monitors['i'].t[:])
 
         # Save state_monitors
         if self.state_monitors['e'] is not None:
-            np.save('saves/state_monitors/'+simulation_name+'_e_v', self.state_monitors['e'].v[:])
-            np.save('saves/state_monitors/'+simulation_name+'_e_t', self.state_monitors['e'].t[:])
+            np.save(SUPERDIR+'saves/state_monitors/'+simulation_name+'_e_v', self.state_monitors['e'].v[:])
+            np.save(SUPERDIR+'saves/state_monitors/'+simulation_name+'_e_t', self.state_monitors['e'].t[:])
         if self.state_monitors['i'] is not None:
-            np.save('saves/state_monitors/'+simulation_name+'_i_v', self.state_monitors['i'].v[:])
-            np.save('saves/state_monitors/'+simulation_name+'_i_t', self.state_monitors['i'].t[:])
+            np.save(SUPERDIR+'saves/state_monitors/'+simulation_name+'_i_v', self.state_monitors['i'].v[:])
+            np.save(SUPERDIR+'saves/state_monitors/'+simulation_name+'_i_t', self.state_monitors['i'].t[:])
 
     def restore_network(self):
         """Restores all attributes of the current class instance to the point where store_network() was called.

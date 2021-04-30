@@ -89,6 +89,16 @@ class SpreizerNet:
             elif syn_name == 'ei' or syn_name == 'ii':
                 p_con = params.synapse_params['p_i']
             self.synapses[syn_name].connect(p=p_con)
+
+        # Synapse delay
+        self.synapses['ee'].delay = self.synapses['ie'].delay = \
+             self.synapses['ei'].delay = self.synapses['ii'].delay = 'synapse_delay'
+
+        # Add to network attribute
+        self.network.add(self.synapses['ee'])
+        self.network.add(self.synapses['ie'])
+        self.network.add(self.synapses['ei'])
+        self.network.add(self.synapses['ii'])
     
     def connect(self, allow_multiple_connections=True, perlin_seed_value=0):
         """Connects neurons with synapses.
